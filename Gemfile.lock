@@ -1,0 +1,36 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    aws-sdk (1.8.5)
+      json (~> 1.4)
+      nokogiri (>= 1.4.4)
+      uuidtools (~> 2.1)
+    bing_translator (3.1.0)
+      json (~> 1.7.7)
+      nokogiri (~> 1.5.9)
+    daemons (1.1.9)
+    eventmachine (1.0.1)
+    json (1.7.7)
+    nokogiri (1.5.9)
+    rack (1.5.2)
+    rack-protection (1.3.2)
+      rack
+    sinatra (1.3.4)
+      rack (~> 1.4)
+      rack-protection (~> 1.3)
+      tilt (~> 1.3, >= 1.3.3)
+    thin (1.5.0)
+      daemons (>= 1.0.9)
+      eventmachine (>= 0.12.6)
+      rack (>= 1.0.0)
+    tilt (1.3.4)
+    uuidtools (2.1.3)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  aws-sdk
+  bing_translator (~> 3.1.0)
+  sinatra
+  thin

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+<head>
+<title>Bing Translate Text To Speech Example</title>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<style>
+    body {
+        font-family: Helvetica, sans-serif;
+        font-size: 11pt;
+        padding: 5px;
+        margin-left: 150px;
+        margin-right: 150px;
+    }
+    h2 {
+        font-weight: normal;
+        font-size: 24pt;
+    }
+    .centered {
+        text-align: center;
+    }
+
+    #in_progress {
+        font-size: 18pt;
+        color: red;
+        display: none;
+        text-align: center;
+    }
+
+    #loudspeaker {
+        text-align: center;
+        display: none;
+    }
+
+    #play_audio_button {
+//        border: 1px solid darkred;
+    }
+
+    .large-text {
+        font-size: 16pt;
+    }
+
+    #query {
+        font-size: 16pt;
+    }
+
+    #language {
+        font-size: 16pt;
+    }
+</style>
+</head>
+
+<body>
+
+<h2 class='centered'>Bing Translate Text To Speech Example</h2>
+
+<p>&nbsp;</p>
+
+<p class='centered'>
+<span class='large-text'>Select Your Language</span>
+<br/>&nbsp;<br/>
+<select id='language'></select>
+<br/>&nbsp;<br/>
+
+
+<span class='large-text'>Enter your Text and Hit Return</span>
+<br/>&nbsp;<br/>
+<input type="text" name="query" id='query' size="80">
+
+</p>
+
+<div id='in_progress'>Working...</div>
+
+<div id='loudspeaker'>
+<img src="loudspeaker.png" alt='Listen to this phrase' title='Listen to this phrase' id="play_audio_button">
+</div>
+
+<p>&nbsp;<br/>&nbsp;</p>
+
+
+<p>
+Text entered in English is passed to the server via Ajax. The server submits that to the Speak interface of Bing Translate and
+the resulting MP3 audio file is stored on Amazon S3. The URL for that file is passed back to the web page. Clicking on the
+Loudspeaker icon will play the audio.
+</p>
+<p>There may be a way to play audio directly from the mp3 data returned from Bing, without writing to a file, but I haven't found it as yet.</p>
+
+<p>NOTE: <span style="color: red">THIS PAGE IS FOR TESTING ONLY</span> - for production use you should download the code and set up your own server.
+Bing Translate provides free service for low numbers of requests and requires payment for larger numbers.
+
+This site may be shut down if usage exceeds the free quota.  Audio files are automatically removed after 1 day.
+</p>
+
+
+
+
+<p>&nbsp;</p>
+<p class='centered'>This demo was created by <a href="http://craic.com">Robert Jones of Craic Computing</a>
+    and is freely distributed under the terms of the MIT license.</p>
+
+
+<script type="text/javascript">
+
+    var host = "http://YOUR SERVER PATH GOES HERE";
+
+    var audioElement;
+
+    // function to respond when the Enter key is hit
+    $.fn.enterKey = function (fnc) {
+        return this.each(function () {
+            $(this).keypress(function (ev) {
+                var keycode = (ev.keyCode ? ev.keyCode : ev.which);
+                if (keycode == '13') {
+                    fnc.call(this, ev);
+                }
+            })
+        })
+    }
+
+
+    var setup_select_menu = function(){
+
+        var languages = [
+                { "language": "ar", "name": "Arabic" },
+                { "language": "bg", "name": "Bulgarian" },
+                { "language": "ca", "name": "Catalan" },
+                { "language": "zh-CHS", "name": "Chinese (Simplified)" },
+                { "language": "zh-CHT", "name": "Chinese (Traditional)" },
+                { "language": "cs",  "name": "Czech"  },
+                { "language": "da",  "name": "Danish" },
+                { "language": "nl",  "name": "Dutch"  },
+                { "language": "en",  "name": "English" },
+                { "language": "et",  "name": "Estonian" },
+                { "language": "fa",  "name": "Persian (Farsi)" },
+                { "language": "fi",  "name": "Finnish" },
+                { "language": "fr",  "name": "French" },
+                { "language": "de",  "name": "German" },
+                { "language": "el",  "name": "Greek" },
+                { "language": "ht",  "name": "Haitian Creole" },
+                { "language": "iw",  "name": "Hebrew" },
+                { "language": "hi",  "name": "Hindi" },
+                { "language": "hu",  "name": "Hungarian" },
+                { "language": "id",  "name": "Indonesian" },
+                { "language": "it",  "name": "Italian" },
+                { "language": "ja",  "name": "Japanese" },
+                { "language": "ko",  "name": "Korean" },
+                { "language": "lv",  "name": "Latvian" },
+                { "language": "lt",  "name": "Lithuanian" },
+                { "language": "ms",  "name": "Malay" },
+                { "language": "mww", "name": "Hmong Daw" },
+                { "language": "no",  "name": "Norwegian" },
+                { "language": "pl",  "name": "Polish" },
+                { "language": "pt",  "name": "Portuguese" },
+                { "language": "ro",  "name": "Romanian" },
+                { "language": "ru",  "name": "Russian" },
+                { "language": "sr",  "name": "Serbian" },
+                { "language": "sk",  "name": "Slovak" },
+                { "language": "sl",  "name": "Slovenian" },
+                { "language": "es",  "name": "Spanish" },
+                { "language": "sv",  "name": "Swedish" },
+                { "language": "th",  "name": "Thai" },
+                { "language": "tr",  "name": "Turkish" },
+                { "language": "uk",  "name": "Ukrainian" },
+                { "language": "ur",  "name": "Urdu" },
+                { "language": "vi",  "name": "Vietnamese" }
+              ];
+
+        var str = "<option value='en' selected>English</option>";
+        $('#language').append(str);
+        for(var i=0; i< languages.length; i++) {
+            if(languages[i]['language'] != 'en') {
+                str = "<option value='" + languages[i]['language'] + "'>" + languages[i]['name'] + "</option>";
+                $('#language').append(str);
+            }
+        }
+    }
+
+
+    var submit_query = function(){
+
+        $('#loudspeaker').hide();
+
+        var query = $('#query').val();
+        var language = $('#language').val();
+
+        if(query != '') {
+
+            var url = host + '/text_to_speech?query="' + query + '"&language=' + language;
+
+            // submit query to server via ajax
+            $('#in_progress').show();
+            $.get(url, function(data) {
+                $('#in_progress').hide();
+                $('#loudspeaker').show();
+
+                // set and play the audio
+                // data.url is a AWS S3 url for the audio file
+                audioElement.setAttribute('src', data.url);
+                audioElement.play();
+            });
+        }
+    }
+
+
+    $(document).ready(function() {
+
+        audioElement = document.createElement('audio');
+
+        setup_select_menu();
+
+        $("#query").enterKey(function(e) {
+            e.preventDefault();
+            submit_query();
+        });
+
+        $("#play_audio_button").click(function(e) {
+            e.preventDefault();
+            audioElement.play();
+        });
+    });
+
+</script>
+
+</body>
+</html>
