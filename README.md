@@ -16,7 +16,7 @@ This setup is somewhat involved and you should have some experience with Sinatra
 
 ###Live demo:
 
-A live version of the tutorial is at http://bing-translate-tts-demo.herokuapp.com - you should give that a try first see what the working app looks like.
+A live version of the tutorial is at [http://bing-translate-tts-demo.craic.com](http://bing-translate-tts-demo.craic.com) - you should give that a try first see what the working app looks like.
 
 
 ###Set up
