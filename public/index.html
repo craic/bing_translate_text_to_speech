@@ -184,8 +184,13 @@ Loudspeaker icon will play the audio.
                 $('#loudspeaker').show();
 
                 // set and play the audio
-                // data.url is a AWS S3 url for the audio file
-                audioElement.setAttribute('src', data.url);
+                // data.url is filename on AWS S3
+                // Unable to play directly from AWS on Firefox due to CORS
+                // so proxy the file through our server
+                url = host + "/proxy?file=" + data.url;
+                audioElement.setAttribute('src', url);
+
+                // NOTE: This first play() does not work on Safari (as of 2013-04-17)
                 audioElement.play();
             });
         }

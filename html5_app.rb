@@ -46,14 +46,14 @@ class Html5App < Sinatra::Base
 
     translator = BingTranslator.new(bing_client_id, bing_client_secret)
 
-    # Fetch the MP3 audio for this phrase
-    audio_stream = translator.speak query, :language => language, :format => 'audio/mp3', :options => 'MaxQuality'
+    # Fetch the WAV audio for this phrase (Firefox does not play MP3 files!)
+    audio_stream = translator.speak query, :language => language, :format => 'audio/mav', :options => 'MaxQuality'
 
     # create a unique digest with the text query and the current time
     digest = Digest::SHA1.hexdigest "#{query} #{Time.now.to_s}"
 
     # Write to a file on Amazon S3
-    filename = "#{language}_#{digest}.mp3"
+    filename = "#{language}_#{digest}.wav"
 
     s3obj = bucket.objects[filename].write(audio_stream, :acl => :public_read)
 
@@ -61,7 +61,19 @@ class Html5App < Sinatra::Base
 
     response["Access-Control-Allow-Origin"] = "*"
     content_type 'application/json', :charset => 'utf-8'
-    { 'url' => s3obj.public_url }.to_json
+    { 'url' => filename }.to_json
+
   end
 
+
+  # Given the filename for an audio file of AWS S3, fetch it and echo the data to the client
+  # This is necessary to get around S3 not supporting the Access-Control-Allow-Origin header
+  get '/proxy' do
+    filename = params['file']
+#    STDERR.puts "proxy   file  #{filename}"
+    s3obj = bucket.objects[filename]
+    response["Access-Control-Allow-Origin"] = "*"
+    content_type 'audio/wav'
+    s3obj.read
+  end
 end

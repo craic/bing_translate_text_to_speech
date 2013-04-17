@@ -6,9 +6,9 @@ At the time of writing, this seems to be the best free Text To Speech API availa
 
 This Git repository contains a basic Ruby [Sinatra](http://www.sinatrarb.com/) application that accesses this API through the ruby gem [bing_translator](https://github.com/CodeBlock/bing_translator-gem), written by Ricky Elrod.
 
-The demo consists of the basic Sinatra app and a single web page. Text entered in the web page is sent to the Sinatra app via Ajax. The server forwards the text to the Bing Translate API, which returns the spoken text as binary data in MP3 format.
+The demo consists of the basic Sinatra app and a single web page. Text entered in the web page is sent to the Sinatra app via Ajax. The server forwards the text to the Bing Translate API, which returns the spoken text as binary data in WAV format.
 
-The server then writes this to a file on Amazon S3 and passes the URL of that back to the web page. The page then plays the remote audio file.
+The server then writes this to a file on Amazon S3 and passes the Filename of that back to the web page. The page then plays the remote audio file via a proxy on the server.
 
 
 This setup is somewhat involved and you should have some experience with Sinatra and Amazon AWS S3 before you undertake to set this up. There are plenty of resources out there to help you with that.
@@ -50,5 +50,11 @@ There ought to be a way to feed MP3 data directly to the audio play() function b
 
 
 The demo is written by Robert Jones of [Craic Computing](http://craic.com) and is freely distributed under the terms of the MIT license.
+
+
+Gotchas:
+
+The original code ran fine on Google Chrome but Firefox turned up some <a href="http://craiccomputing.blogspot.com/2013/04/gotchas-when-working-with-htm5-audio.html">Gotchas</a>. I had to switch to .wav files instead of .mp3 as Firefox will not play MP3 files and I had to proxy the audio files through my server instead of playing them directly as AWS S3 does not support the Access-Control-Allow-Origin header for files.
+
 
 
