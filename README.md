@@ -1,14 +1,14 @@
 ### Example Application that uses Bing Translate Text To Speech
 
-The [Bing Translation API](http://www.microsoft.com/en-us/translator/developers.aspx) includes a Text To Speech feature which is useful for many applications other than language translation.
+The [Bing Translation API](http://www.microsoft.com/en-us/translator/developers.aspx) includes a Text To Speech (TTS) feature which is useful for many applications other than language translation.
 
-At the time of writing, this seems to be the only good, free Text To Speech API available. Google has one linked to its translation API but it is not actively supported. A very nice feature of the Bing API is the ability to specify the language, which greatly improves the quality of the speech.
+At the time of writing, this seems to be the best free Text To Speech API available. Google has one linked to its translation API but it is not actively supported and there are several commercial TTS services. A very nice feature of the Bing API is the ability to specify the language, which greatly improves the quality of the speech.
 
-This Git repository contains a basic Ruby [Sinatra](http://www.sinatrarb.com/) application that accesses this API through the ruby gem [bing_translator](https://github.com/CodeBlock/bing_translator-gem).
+This Git repository contains a basic Ruby [Sinatra](http://www.sinatrarb.com/) application that accesses this API through the ruby gem [bing_translator](https://github.com/CodeBlock/bing_translator-gem), written by Ricky Elrod.
 
-The demo consists of the basic Sinatra app and a single web page. Text entered in the web page is sent to the Sinatra app via ajax. The server forwards the text to the Bing Translate API, which returns the spoken text as binary data in MP3 format.
+The demo consists of the basic Sinatra app and a single web page. Text entered in the web page is sent to the Sinatra app via Ajax. The server forwards the text to the Bing Translate API, which returns the spoken text as binary data in MP3 format.
 
-The server then write this to a file on Amazon S3 and passes the URL of that back to the web page. The page then plays the remote audio file.
+The server then writes this to a file on Amazon S3 and passes the URL of that back to the web page. The page then plays the remote audio file.
 
 
 This setup is somewhat involved and you should have some experience with Sinatra and Amazon AWS S3 before you undertake to set this up. There are plenty of resources out there to help you with that.
