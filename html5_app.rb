@@ -39,15 +39,39 @@ class Html5App < Sinatra::Base
     File.read(File.join('public', 'index.html'))
   end
 
-  get '/text_to_speech' do
+
+  # Simplified version that uses web audio API (not available on Firefox)
+  get '/text_to_speech_web_audio_api' do
 
     query = params['query']
+
     language = params['language']
 
     translator = BingTranslator.new(bing_client_id, bing_client_secret)
 
-    # Fetch the WAV audio for this phrase (Firefox does not play MP3 files!)
-    audio_stream = translator.speak query, :language => language, :format => 'audio/mav', :options => 'MaxQuality'
+    # Fetch the WAV audio for this phrase
+    # audio tag in Firefox does not play mp3 files ! - due to licensing issues...
+    audio_stream = translator.speak query, :language => language, :format => 'audio/wav', :options => 'MaxQuality'
+
+    response["Access-Control-Allow-Origin"] = "*"
+    content_type 'audio/wav'
+    audio_stream
+  end
+
+
+
+  # Complicated version that stores files on AWS and uses a proxy (works on Firefox)
+  get '/text_to_speech_audio_tag' do
+
+    query = params['query']
+
+    language = params['language']
+
+    translator = BingTranslator.new(bing_client_id, bing_client_secret)
+
+    # Fetch the WAV audio for this phrase
+    # audio tag in Firefox does not play mp3 files ! - due to licensing issues...
+    audio_stream = translator.speak query, :language => language, :format => 'audio/wav', :options => 'MaxQuality'
 
     # create a unique digest with the text query and the current time
     digest = Digest::SHA1.hexdigest "#{query} #{Time.now.to_s}"
@@ -57,23 +81,21 @@ class Html5App < Sinatra::Base
 
     s3obj = bucket.objects[filename].write(audio_stream, :acl => :public_read)
 
-    # return the url as json
+    # return the filename as json
 
     response["Access-Control-Allow-Origin"] = "*"
     content_type 'application/json', :charset => 'utf-8'
     { 'url' => filename }.to_json
-
   end
-
 
   # Given the filename for an audio file of AWS S3, fetch it and echo the data to the client
   # This is necessary to get around S3 not supporting the Access-Control-Allow-Origin header
   get '/proxy' do
     filename = params['file']
-#    STDERR.puts "proxy   file  #{filename}"
     s3obj = bucket.objects[filename]
     response["Access-Control-Allow-Origin"] = "*"
     content_type 'audio/wav'
     s3obj.read
   end
+
 end

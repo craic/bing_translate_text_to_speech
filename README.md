@@ -6,12 +6,22 @@ At the time of writing, this seems to be the best free Text To Speech API availa
 
 This Git repository contains a basic Ruby [Sinatra](http://www.sinatrarb.com/) application that accesses this API through the ruby gem [bing_translator](https://github.com/CodeBlock/bing_translator-gem), written by Ricky Elrod.
 
-The demo consists of the basic Sinatra app and a single web page. Text entered in the web page is sent to the Sinatra app via Ajax. The server forwards the text to the Bing Translate API, which returns the spoken text as binary data in WAV format.
 
-The server then writes this to a file on Amazon S3 and passes the Filename of that back to the web page. The page then plays the remote audio file via a proxy on the server.
+The demo consists of the basic Sinatra app and two web pages. These implement two approaches to the problem.
 
+The first approach, in index.html, uses the Web Audio API to handle the audio data directly. The second, in text_to_speech_audio_tag.html, uses the &lt;audio&gt; tag to play an audio file that is downloaded from Amazon AWS S3 via a proxy on your server.
 
-This setup is somewhat involved and you should have some experience with Sinatra and Amazon AWS S3 before you undertake to set this up. There are plenty of resources out there to help you with that.
+The second approach is a lot more complex than the first, however this does work with Firefox which does not currently have the Web Audio API implemented.
+
+###Web Audio API approach
+
+Text entered in the web page is sent to the Sinatra app via Ajax. The server forwards the text to the Bing Translate API, which returns the spoken text as binary data in WAV format to the browser. The audio is stored in memory in the browser and can be played multiple times without reloading. Amazon AWS S3 is not involved in this approach at all.
+
+###Audio Tag approach
+
+In the absence of the Web Audio API, the server writes the audio from Bing to a file on Amazon AWS and returns the filename of this to the client. To play the audio the client uses the &lt;audio&gt; tag to download the audio file from S3 via a proxy on your server.
+
+This setup is somewhat involved and you should have some experience with Sinatra and Amazon AWS S3 before you undertake this. There are plenty of resources out there to help you with that.
 
 
 ###Live demo:
@@ -45,8 +55,6 @@ Refer to the heroku documentation to get it started on that service.
 Troubleshooting:
 
 The demo has a lot of moving parts - add/uncomment debugging statements in the web page (console.log) and Sinatra code (STDERR.puts) to help if you run into problems.
-
-There ought to be a way to feed MP3 data directly to the audio play() function but it appears to require an audio file as its 'src' attribute.
 
 
 The demo is written by Robert Jones of [Craic Computing](http://craic.com) and is freely distributed under the terms of the MIT license.

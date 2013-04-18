@@ -53,10 +53,7 @@
 <h2 class='centered'>Bing Translate Text To Speech Example</h2>
 
 <p>&nbsp;</p>
-<p class='centered' style="color: #999">As of 2013-04-18, this page works on Google Chrome and Safari, but not Firefox</p>
-<p class='centered' style="color: #999">With Firefox use <a href="text_to_speech_audio_tag.html">this Alternate Version</a></p>
 
-<p>&nbsp;</p>
 <p class='centered'>
 <span class='large-text'>Select Your Language</span>
 <br/>&nbsp;<br/>
@@ -66,7 +63,8 @@
 
 <span class='large-text'>Enter your Text and Hit Return</span>
 <br/>&nbsp;<br/>
-<input type="text" name="query" id='query' size="80", maxlength="80">
+<input type="text" name="query" id='query' size="80">
+
 </p>
 
 <div id='in_progress'>Working...</div>
@@ -77,22 +75,17 @@
 
 <p>&nbsp;<br/>&nbsp;</p>
 
+
 <p>
 Text entered in English is passed to the server via Ajax. The server submits that to the Speak interface of Bing Translate and
-the resulting audio file is passed back to the web page and played. Clicking on the Loudspeaker icon will play the audio again.
+the resulting MP3 audio file is stored on Amazon S3. The URL for that file is passed back to the web page. Clicking on the
+Loudspeaker icon will play the audio.
 </p>
 
-<p>NOTE: <span style="color: red">THIS PAGE IS FOR TESTING ONLY</span> - for production use you should download the code and set up your own server.
-Bing Translate provides free service for low numbers of requests and requires payment for larger numbers.
-This site may be shut down if usage exceeds the free quota.
-</p>
-
-<p>You can find all the code for this demo at
-    <a href="https://github.com/craic/bing_translate_text_to_speech">https://github.com/craic/bing_translate_text_to_speech</a></p>
 
 
 <p>&nbsp;</p>
-<p class='centered'>This demo was created by <a href="http://craic.com">Robert Jones of Craic Computing</a>
+<p class='centered'>This demo was created by Robert Jones of <a href="http://craic.com">Craic Computing</a>
     and is freely distributed under the terms of the MIT license.</p>
 
 
@@ -100,9 +93,8 @@ This site may be shut down if usage exceeds the free quota.
 
     var host = "http://YOUR SERVER PATH GOES HERE";
 
-    // Global variables
-    var audioContext;
-    var audio_buffer = 0;
+    var audioElement;
+    var audio_url = '';
 
     // function to respond when the Enter key is hit
     $.fn.enterKey = function (fnc) {
@@ -179,60 +171,36 @@ This site may be shut down if usage exceeds the free quota.
 
         $('#loudspeaker').hide();
 
-        var query    = $('#query').val();
+        var query = $('#query').val();
         var language = $('#language').val();
 
         if(query != '') {
-            var url = host + '/text_to_speech_web_audio_api?query="' + query + '"&language=' + language;
-            load_audio(url);
-        }
-    }
 
+            var url = host + '/text_to_speech_audio_tag?query="' + query + '"&language=' + language;
 
-    // load the sound from a URL
-    function load_audio(url) {
+            // submit query to server via ajax
+            $('#in_progress').show();
 
-        $('#in_progress').show();
-
-        var request = new XMLHttpRequest();
-        request.open('GET', url, true);
-        request.responseType = 'arraybuffer';
-
-        // When loaded decode the data and store the audio buffer in memory
-        request.onload = function() {
-            audioContext.decodeAudioData(request.response, function(buffer) {
+            $.get(url, function(data) {
                 $('#in_progress').hide();
                 $('#loudspeaker').show();
-                audio_buffer = buffer;
-                play_audio(audio_buffer);
 
-            }, onError);
+                // set and play the audio from the file on AWS S3 via the Heroku proxy
+                // Unable to play directly from AWS on Firefox due to CORS so proxy the file through our server
+
+                audio_url = host + "/proxy?file=" + data.url;
+                audioElement.setAttribute('src', audio_url);
+
+                // NOTE: This first play() does not work on Safari (as of 2013-04-17)
+                audioElement.play();
+            });
         }
-        request.send();
-    }
-
-
-    function play_audio(buffer) {
-        var audioSourceNode = audioContext.createBufferSource();
-        audioSourceNode.buffer = audio_buffer;
-        audioSourceNode.connect(audioContext.destination);
-        audioSourceNode.noteOn(0);
-    }
-
-    // log if an error occurs
-    function onError(e) {
-        console.log(e);
     }
 
 
     $(document).ready(function() {
 
-        try {
-            // the AudioContext is the primary container for all audio  objects
-            audioContext = new webkitAudioContext();
-        } catch(e) {
-            alert('Web Audio API is not supported in this browser');
-        }
+        audioElement = document.createElement('audio');
 
         setup_select_menu();
 
@@ -243,7 +211,8 @@ This site may be shut down if usage exceeds the free quota.
 
         $("#play_audio_button").click(function(e) {
             e.preventDefault();
-            play_audio(audio_buffer);
+            audioElement.setAttribute('src', audio_url);
+            audioElement.play();
         });
     });
 
